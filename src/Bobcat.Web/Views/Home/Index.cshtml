@@ -1,0 +1,100 @@
+﻿<div id="clientContainer" class="row h-100">
+    <div class="col-md-12 col-lg-6 mb-3 mb-lg-0 mb-xl-0">
+
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createConnectionModal">
+            Create new connection
+        </button>
+        
+        <div id="connectionContainer" class="row" data-bind="foreach: selectedClients">
+            <div class="col-4">
+                <canvas id="videoCanvas" data-bind="customConnectionBinding: player">
+                    <p>
+                        Please use a browser that supports the Canvas Element, like
+                        <a href="http://www.google.com/chrome">Chrome</a>,
+                        <a href="http://www.mozilla.com/firefox/">Firefox</a>,
+                        <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
+                    </p>
+                </canvas>    
+            </div>
+        </div>
+        
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="createConnectionModal" tabindex="-1" role="dialog" aria-labelledby="createConnectionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createConnectionModalLabel">Create new connection</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group row">
+                        <div class="col-12">
+                            <a href="#" id="wsClientSearch" class="btn btn-sm btn-success" data-bind="click: getProviders">Search for providers</a>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <div class="col-12 table-responsive">
+                            <table class="table table-sm" data-bind="visible: camClients() && camClients().length > 0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Select</th>
+                                    <th scope="col">Hostname</th>
+                                </tr>
+                                </thead>
+                                <tbody data-bind="foreach: camClients">
+                                <tr>
+                                    <td><input type="checkbox" data-bind="checked: selected" /></td>
+                                    <td data-bind="text: hostname"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveProviders">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+
+        ko.applyBindings(new ClientViewModel(), document.getElementById("clientContainer"));
+
+        //$(document).ready(function () {
+        //    var canvas = document.getElementById('videoCanvas');
+        //    //var ctx = canvas.getContext('2d');
+        //    //ctx.fillStyle = 'blue';
+        //    //ctx.fillText('Loading...', canvas.width / 2 - 30, canvas.height / 3);
+
+        //    var player = new JSMpeg.Player('ws://localhost:44369/ws',
+        //        {
+        //            canvas: canvas
+        //        });
+
+        //    player.source.onMessage = function (ev) {
+
+        //        var isFirstChunk = !player.source.established;
+        //        player.source.established = true;
+        //        if (isFirstChunk && player.source.onEstablishedCallback) {
+        //            player.source.onEstablishedCallback(player.source);
+        //        }
+        //        if (this.destination) {
+        //            player.source.destination.write(ev.data);
+        //        }
+        //    }
+        //});
+    </script>
+}
