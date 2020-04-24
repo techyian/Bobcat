@@ -8,14 +8,34 @@
         
         <div id="connectionContainer" class="row" data-bind="foreach: selectedClients">
             <div class="col-4">
-                <canvas id="videoCanvas" data-bind="customConnectionBinding: player">
+                <canvas class="video-canvas" data-bind="customConnectionBinding: player">
                     <p>
                         Please use a browser that supports the Canvas Element, like
                         <a href="http://www.google.com/chrome">Chrome</a>,
                         <a href="http://www.mozilla.com/firefox/">Firefox</a>,
                         <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
                     </p>
-                </canvas>    
+                </canvas>
+                <div class="dropdown">
+
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-adjust"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" type="button" data-bind="click: function(data, event) { $root.setCameraConfig(data, event, 'ImageFx', 'Sketch') }">ImageFx - Sketch</button>
+                        <button class="dropdown-item" type="button">Another action</button>
+                        <button class="dropdown-item" type="button">Something else here</button>
+                    </div>
+                    
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-camera-retro"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" type="button">Action</button>
+                        <button class="dropdown-item" type="button">Another action</button>
+                        <button class="dropdown-item" type="button">Something else here</button>
+                    </div>
+                </div>
             </div>
         </div>
         

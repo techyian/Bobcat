@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using ProtoBuf;
 using Bobcat.Common.Network;
 using Bobcat.Web.Models;
+using Newtonsoft.Json;
 
 namespace Bobcat.Web.Websockets
 {
@@ -45,27 +46,55 @@ namespace Bobcat.Web.Websockets
 
         public override async Task ReceiveTextAsync(WebSocket socket, string connectionId, string requestedProviderId, WebSocketReceiveResult result, string text)
         {
-            // Check whether we have received a ping from the Internet browser Websocket and if so send a pong message back. 
-            if (text.StartsWith("__ping__"))
+            if (!string.IsNullOrEmpty(requestedProviderId))
             {
-                // Extract the requested connectionId from the ping message.
-                if (!string.IsNullOrEmpty(requestedProviderId) && Guid.TryParse(requestedProviderId, out Guid parsedGuid))
-                {
-                    // Check if the connectionId is still available.
-                    var checkSocket = this.WebSocketConnectionManager.GetSocketById(requestedProviderId);
+                var requestedProviderSocket = this.GetProviderActiveSocket(requestedProviderId);
 
-                    if (checkSocket != null)
+                if (requestedProviderSocket != null)
+                {
+                    // Check whether we have received a ping from the Internet browser Websocket and if so send a pong message back. 
+                    if (text.StartsWith("__ping__"))
                     {
                         await SendMessageAsync(socket, "__pong__");
                     }
-                    else
-                    {
-                        socket.Abort();
 
-                        await this.OnDisconnected(requestedProviderId);
+                    if (text.StartsWith("__config__"))
+                    {
+                        // Try and parse as JSON message.
+                        try
+                        {
+                            var configChange = JsonConvert.DeserializeObject<CameraConfigChange>(text.Replace("__config__", ""));
+
+                            if (configChange != null)
+                            {
+                                // We have received a config change request, construct a CamClientRequest.
+                                var ms = new MemoryStream();
+                                var camClientRequest = this.GenerateRequest(new CamClientHeader()
+                                {
+                                    HeaderType = CamClientHeaderType.Config
+                                }, Encoding.Unicode.GetBytes(text));
+
+                                Serializer.Serialize(ms, camClientRequest);
+
+                                await this.SendBufferAsync(requestedProviderSocket, ms.ToArray());
+                            }
+                        }
+                        catch
+                        {
+                            // Just swallow and ignore if unable to parse JSON.
+                        }
                     }
                 }
+                else
+                {
+                    // The provider isn't available anymore so we should abort the socket requesting the provider.
+                    socket.Abort();
+
+                    await this.OnDisconnected(connectionId);
+                    await this.OnDisconnected(requestedProviderId);
+                }
             }
+
         }
 
         public override async Task ReceiveBufferAsync(WebSocket socket, string connectionId, WebSocketReceiveResult result, byte[] buffer)
@@ -104,7 +133,7 @@ namespace Bobcat.Web.Websockets
 
                         foreach (var subscriber in tempSubs)
                         {
-                            await SendDataToSocket(subscriber, request.Data);
+                            await SendBufferAsync(subscriber, request.Data);
                         }
                     }
                 }
@@ -135,6 +164,32 @@ namespace Bobcat.Web.Websockets
             var request = Serializer.Deserialize<CamClientRequest>(ms);
 
             return request;
+        }
+
+        private WebSocket GetProviderActiveSocket(string requestedProviderId)
+        {
+            // Extract the requested connectionId from the ping message.
+            if (!string.IsNullOrEmpty(requestedProviderId) && Guid.TryParse(requestedProviderId, out Guid parsedGuid))
+            {
+                // Check if the connectionId is still available.
+                var checkSocket = this.WebSocketConnectionManager.GetSocketById(requestedProviderId);
+
+                if (checkSocket != null)
+                {
+                    return checkSocket;
+                }
+            }
+
+            return null;
+        }
+
+        private CamClientRequest GenerateRequest(CamClientHeader header, byte[] buffer)
+        {
+            return new CamClientRequest()
+            {
+                Header = header,
+                Data = buffer
+            };
         }
     }
 }

@@ -47,10 +47,10 @@ namespace Bobcat.Client
             {
                 Options =
                 {
-                    KeepAliveInterval = TimeSpan.FromSeconds(5)
+                    KeepAliveInterval = TimeSpan.FromSeconds(5),
                 }
             });
-
+            
             var client = new WebsocketClient(url, factory);
             
             client.ReconnectTimeout = TimeSpan.FromSeconds(30);
@@ -184,7 +184,7 @@ namespace Bobcat.Client
 
                         var byteArr = new byte[(int)ms.Length + 4];
 
-                        _logger.LogInformation($"Memorystream length {(int)ms.Length}");
+                        //_logger.LogInformation($"Memorystream length {(int)ms.Length}");
 
                         byte[] intBytes = BitConverter.GetBytes((int)ms.Length);
                         if (BitConverter.IsLittleEndian)
@@ -193,7 +193,7 @@ namespace Bobcat.Client
                         Array.Copy(intBytes, byteArr, intBytes.Length);
                         Array.Copy(ms.ToArray(), 0, byteArr, 4, ms.Length);
 
-                        _logger.LogInformation($"Sending data {read}");
+                        //_logger.LogInformation($"Sending data {read}");
 
                         Task.Run(() => _client.Send(byteArr));
 

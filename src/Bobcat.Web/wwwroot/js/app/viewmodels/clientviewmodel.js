@@ -38,6 +38,15 @@
         });
     };
 
+    self.setCameraConfig = function(camClient, event, configType, configSubtype) {
+        if (camClient.player) {
+            var cameraConfig = new CameraConfig(configType, configSubtype);
+            var json = JSON.stringify(cameraConfig);
+
+            camClient.player.source.socket.send('__config__' + json);
+        }
+    }
+
     /*
      * ViewModel Init     
      */

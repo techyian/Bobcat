@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <Folder Include="Services\" />
+    <Folder Include="wwwroot\sass\" />
   </ItemGroup>
 
 

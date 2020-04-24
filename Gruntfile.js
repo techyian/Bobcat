@@ -22,7 +22,8 @@ module.exports = function(grunt) {
 			'src/Bobcat.Web/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js', 			
 			'src/Bobcat.Web/wwwroot/lib/toastr.js/toastr.min.js', 				
 			'src/Bobcat.Web/wwwroot/js/jsmpeg.js', 				
-			'src/Bobcat.Web/wwwroot/lib/knockout/knockout-latest.js'
+			'src/Bobcat.Web/wwwroot/lib/knockout/knockout-latest.js',
+			'src/Bobcat.Web/wwwroot/js/all.js'
 		  ],
 		  dest: 'src/Bobcat.Web/wwwroot/js/resources.js',
 	    },

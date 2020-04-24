@@ -59,13 +59,13 @@ namespace Bobcat.Web.Websockets
                 endOfMessage: true,
                 cancellationToken: CancellationToken.None);
         }
-
+        
         public async Task SendMessageAsync(string socketId, string message)
         {
             await SendMessageAsync(WebSocketConnectionManager.GetSocketById(socketId), message);
         }
-        
-        public async Task SendDataToSocket(string socketId, byte[] buffer)
+
+        public async Task SendBufferAsync(string socketId, byte[] buffer)
         {
             await SendBufferAsync(WebSocketConnectionManager.GetSocketById(socketId), buffer);
         }
