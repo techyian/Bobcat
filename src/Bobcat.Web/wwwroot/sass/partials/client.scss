@@ -1,0 +1,15 @@
+.navbar {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+.bottom-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 10rem;
+    width: 100%;
+    z-index: 1000;
+    border-top: 1px solid $gray-400;
+    padding: 1.5rem;
+}

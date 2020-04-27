@@ -92,8 +92,7 @@ namespace Bobcat.Web.Websockets
                         bufferPool.Return(buffer);
                     });
                 }
-                catch (WebSocketException wsex) when (wsex.WebSocketErrorCode ==
-                                                      WebSocketError.ConnectionClosedPrematurely)
+                catch (WebSocketException wsex)
                 {
                     socketClosing = true;
                 }
@@ -112,8 +111,6 @@ namespace Bobcat.Web.Websockets
             cts.Cancel();
 
             await _webSocketHandler.OnDisconnected(connectionId);
-            
-            socket.Abort();
         }
         
         private async Task Receive(WebSocket socket, byte[] buffer, Action<WebSocketReceiveResult, byte[]> handleMessage)

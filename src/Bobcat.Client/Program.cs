@@ -29,10 +29,11 @@ namespace Bobcat.Client
             _service = new PiCamService(loggerFactory.CreateLogger<PiCamService>(), _applicationTokenSource);
 
             Console.CancelKeyPress += Console_OnCancelKeyPress;
-            
+
+            _service.InitialiseCamera();
             _service.InitialiseClient();
 
-            await _service.InitialiseCamera();
+            await _applicationTokenSource.Token.AsTask();
         }
 
         private static void Console_OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)

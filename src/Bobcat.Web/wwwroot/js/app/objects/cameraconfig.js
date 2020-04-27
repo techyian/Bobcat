@@ -1,4 +1,4 @@
-﻿function CameraConfig(configType, configSubtype) {
+﻿function CameraConfig(configType, configValue) {
     this.configType = configType;
-    this.configSubtype = configSubtype;
+    this.configValue = configValue;
 }

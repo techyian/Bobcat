@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using MMALSharp.Common;
+using MMALSharp.Common.Utility;
 using MMALSharp.Handlers;
 
 namespace Bobcat.Client
@@ -116,6 +118,8 @@ namespace Bobcat.Client
         /// <inheritdoc />
         public void Dispose()
         {
+            MMALLog.Logger.LogInformation("Disposing capture handler.");
+
             if (!CurrentProcess.HasExited)
             {
                 CurrentProcess.Kill();

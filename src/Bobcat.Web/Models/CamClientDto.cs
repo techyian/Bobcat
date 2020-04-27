@@ -1,4 +1,5 @@
-﻿using Bobcat.Common.Network;
+﻿using System.Collections.Generic;
+using Bobcat.Common.Network;
 
 namespace Bobcat.Web.Models
 {
@@ -8,5 +9,6 @@ namespace Bobcat.Web.Models
         public string ConnectionId { get; set; }
         public string Hostname { get; set; }
         public CamClientType ClientType { get; set; }
+        public List<CameraConfig> ClientConfig { get; set; }
     }
 }

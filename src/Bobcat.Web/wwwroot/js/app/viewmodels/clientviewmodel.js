@@ -4,7 +4,35 @@
 
     self.camClients = ko.observableArray([]);
     self.selectedClients = ko.observableArray([]);
+    self.currentSelectedClient = null;
 
+    // Bottom container observables.
+    self.clientHostname = ko.observable();
+    self.clientBrightness = ko.observable(50);
+    self.clientSharpness = ko.observable(0);
+    self.clientContrast = ko.observable(0);
+    self.clientSaturation = ko.observable(0);
+    self.clientImageFxOptions = ko.observableArray([
+        { imageFxName: 'None', imageFxValue: 'MMAL_PARAM_IMAGEFX_NONE' },
+        { imageFxName: 'Cartoon', imageFxValue: 'MMAL_PARAM_IMAGEFX_CARTOON' },
+        { imageFxName: 'Colour Balance', imageFxValue: 'MMAL_PARAM_IMAGEFX_COLOURBALANCE' },
+        { imageFxName: 'Colour Point', imageFxValue: 'MMAL_PARAM_IMAGEFX_COLOURPOINT' },
+        { imageFxName: 'Colour Swap', imageFxValue: 'MMAL_PARAM_IMAGEFX_COLOURSWAP' },
+        { imageFxName: 'Emboss', imageFxValue: 'MMAL_PARAM_IMAGEFX_EMBOSS' },
+        { imageFxName: 'Film', imageFxValue: 'MMAL_PARAM_IMAGEFX_FILM' },
+        { imageFxName: 'GPen', imageFxValue: 'MMAL_PARAM_IMAGEFX_GPEN' },
+        { imageFxName: 'Hatch', imageFxValue: 'MMAL_PARAM_IMAGEFX_HATCH' },
+        { imageFxName: 'Negative', imageFxValue: 'MMAL_PARAM_IMAGEFX_NEGATIVE' },
+        { imageFxName: 'Oilpaint', imageFxValue: 'MMAL_PARAM_IMAGEFX_OILPAINT' },
+        { imageFxName: 'Pastel', imageFxValue: 'MMAL_PARAM_IMAGEFX_PASTEL' },
+        { imageFxName: 'Posterise', imageFxValue: 'MMAL_PARAM_IMAGEFX_POSTERISE' },
+        { imageFxName: 'Sketch', imageFxValue: 'MMAL_PARAM_IMAGEFX_SKETCH' },
+        { imageFxName: 'Solarize', imageFxValue: 'MMAL_PARAM_IMAGEFX_SOLARIZE' },
+        { imageFxName: 'Washedout', imageFxValue: 'MMAL_PARAM_IMAGEFX_WASHEDOUT' }
+    ]);
+    self.selectedImageFx = ko.observable('MMAL_PARAM_IMAGEFX_NONE');
+    self.showClientConfigContainer = ko.observable(false);
+    
     self.getProviders = function() {
         $.ajax({
             type: 'GET',
@@ -14,7 +42,7 @@
                     self.camClients([]);
 
                     for (let i = 0; i < data.length; i++) {
-                        self.camClients.push(new CamClient(data[i].id, data[i].connectionId, data[i].hostname, 'Provider'));
+                        self.camClients.push(new CamClient(data[i].id, data[i].connectionId, data[i].hostname, 'Provider', data[i].clientConfig));
                     }
                 }
             },
@@ -23,11 +51,7 @@
             }
         });
     };
-
-    self.createConnection = function() {
-
-    };
-
+    
     self.saveProviders = function() {
         self.selectedClients([]);
 
@@ -38,14 +62,51 @@
         });
     };
 
-    self.setCameraConfig = function(camClient, event, configType, configSubtype) {
-        if (camClient.player) {
-            var cameraConfig = new CameraConfig(configType, configSubtype);
-            var json = JSON.stringify(cameraConfig);
+    self.setCameraConfig = function() {
+        if (self.currentSelectedClient && self.currentSelectedClient.player) {
 
-            camClient.player.source.socket.send('__config__' + json);
+            var cameraConfigArr = [];
+
+            cameraConfigArr.push(new CameraConfig('Brightness', self.clientBrightness().toString()));
+            cameraConfigArr.push(new CameraConfig('Sharpness', self.clientSharpness().toString()));
+            cameraConfigArr.push(new CameraConfig('Contrast', self.clientContrast().toString()));
+            cameraConfigArr.push(new CameraConfig('Saturation', self.clientSaturation().toString()));
+            cameraConfigArr.push(new CameraConfig('ImageFx', self.selectedImageFx()));
+
+            var json = JSON.stringify(cameraConfigArr);
+
+            self.currentSelectedClient.player.source.socket.send('__config__' + json);
         }
-    }
+    };
+
+    self.showClientConfig = function (camClient) {
+        for (let i = 0; i < camClient.currentConfig.length; i++) {
+            let currentConfigItem = camClient.currentConfig[i];
+
+            if (currentConfigItem.configType === 'Brightness') {
+                self.clientBrightness(parseInt(currentConfigItem.configValue));
+            }
+
+            if (currentConfigItem.configType === 'Sharpness') {
+                self.clientSharpness(parseInt(currentConfigItem.configValue));
+            }
+
+            if (currentConfigItem.configType === 'Contrast') {
+                self.clientContrast(parseInt(currentConfigItem.configValue));
+            }
+
+            if (currentConfigItem.configType === 'Saturation') {
+                self.clientSaturation(parseInt(currentConfigItem.configValue));
+            }
+
+            if (currentConfigItem.configType === 'ImageFx') {
+                self.selectedImageFx(currentConfigItem.configValue);
+            }
+        }
+
+        self.currentSelectedClient = camClient;
+        self.showClientConfigContainer(true);
+    };
 
     /*
      * ViewModel Init     

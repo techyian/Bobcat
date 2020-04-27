@@ -4,16 +4,24 @@ using MMALSharp.Components;
 using MMALSharp.Native;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Reactive.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Bobcat.Common;
 using MMALSharp.Common;
 using MMALSharp.Common.Utility;
 using ProtoBuf;
 using Bobcat.Common.Network;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Websocket.Client;
 
 namespace Bobcat.Client
@@ -24,12 +32,14 @@ namespace Bobcat.Client
         private readonly CancellationTokenSource _applicationTokenSource;
         private readonly MMALCamera _cam = MMALCamera.Instance;
         private readonly string _uniqueId = Guid.NewGuid().ToString();
+        private readonly string _hostname;
+        
+        private static readonly object ReadLock = new object();
 
         private Process _captureHandlerProcess;
         private CancellationTokenSource _cameraTokenSource;
         private WebsocketClient _client;
         private bool _running;
-        private string _hostname;
         private DateTime _lastPingSent;
         
         public PiCamService(ILogger<PiCamService> logger, CancellationTokenSource applicationTokenSource)
@@ -39,7 +49,7 @@ namespace Bobcat.Client
             _hostname = Dns.GetHostName();
         }
 
-        public void InitialiseClient()
+        public async Task InitialiseClient()
         {
             var url = new Uri("ws://192.168.1.92:44369/bobcat");
 
@@ -74,25 +84,34 @@ namespace Bobcat.Client
                 if (msg.MessageType == WebSocketMessageType.Binary)
                 {
                     _logger.LogInformation($"Binary Message received");
-                    this.ProcessBinaryReceived(msg.Binary);
-                }
 
-                if (msg.MessageType == WebSocketMessageType.Close)
-                {
-                    // Attempt reconnect.
-                    client?.Start();
+                    Task.Run(async () =>
+                    {
+                        await this.ProcessBinaryReceived(msg.Binary);
+                    });
                 }
             });
 
-            client.Start();
-            
-            _logger.LogInformation("Client started");
+            _logger.LogInformation("Starting client...");
 
             _client = client;
+
+            await client.Start();
         }
 
         public async Task InitialiseCamera()
         {
+            if (_running)
+            {
+                lock (ReadLock)
+                {
+                    _cameraTokenSource.Cancel();
+                }
+                
+                // Wait for camera to cancel.
+                await Task.Delay(500);
+            }
+
             if (!_running)
             {
                 _cameraTokenSource = new CancellationTokenSource();
@@ -139,11 +158,11 @@ namespace Bobcat.Client
                 try
                 {
                     _running = true;
-
+                    
                     var cameraTask = _cam.ProcessAsync(_cam.Camera.VideoPort, stoppingToken);
-                    this.ProcessFFmpegStream();
+                    var ffmpegTask = Task.Run(this.ProcessFFmpegStream, stoppingToken);
 
-                    await cameraTask;
+                    await Task.WhenAny(cameraTask, ffmpegTask);
                 }
                 catch (Exception e)
                 {
@@ -151,6 +170,8 @@ namespace Bobcat.Client
                     _running = false;
                 }
             }
+
+            _logger.LogInformation("Stop camera running");
 
             _running = false;
         }
@@ -163,39 +184,37 @@ namespace Bobcat.Client
                 {
                     var arrayPool = ArrayPool<byte>.Shared;
 
-                    while (!_cameraTokenSource.Token.IsCancellationRequested && 
+                    while (!_cameraTokenSource.Token.IsCancellationRequested ||
                            !_applicationTokenSource.Token.IsCancellationRequested)
                     {
                         // ArrayPool should hopefully be quicker for larger allocations.
                         var buffer = arrayPool.Rent(32768);
                         var ms = new MemoryStream();
-
-                        var read = _captureHandlerProcess.StandardOutput.BaseStream.Read(buffer, 0, buffer.Length);
-
-                        // The buffer we send to the server should only be the length of the amount of data we were able to extract from
-                        // the StandardOutput stream so we need to copy that chunk into a smaller buffer.
-                        var accurateBuffer = new byte[read];
-
-                        Array.Copy(buffer, 0, accurateBuffer, 0, read);
-
-                        var request = this.GenerateRequest(accurateBuffer);
                         
-                        Serializer.Serialize(ms, request);
+                        lock (ReadLock)
+                        {
+                            if (!_cameraTokenSource.Token.IsCancellationRequested &&
+                                !_applicationTokenSource.Token.IsCancellationRequested)
+                            {
+                                var read = _captureHandlerProcess.StandardOutput.BaseStream.Read(buffer, 0, buffer.Length);
 
-                        var byteArr = new byte[(int)ms.Length + 4];
+                                // The buffer we send to the server should only be the length of the amount of data we were able to extract from
+                                // the StandardOutput stream so we need to copy that chunk into a smaller buffer.
+                                var accurateBuffer = new byte[read];
 
-                        //_logger.LogInformation($"Memorystream length {(int)ms.Length}");
+                                Array.Copy(buffer, 0, accurateBuffer, 0, read);
 
-                        byte[] intBytes = BitConverter.GetBytes((int)ms.Length);
-                        if (BitConverter.IsLittleEndian)
-                            Array.Reverse(intBytes);
+                                var request = this.GenerateRequest(accurateBuffer);
 
-                        Array.Copy(intBytes, byteArr, intBytes.Length);
-                        Array.Copy(ms.ToArray(), 0, byteArr, 4, ms.Length);
+                                Serializer.Serialize(ms, request);
 
-                        //_logger.LogInformation($"Sending data {read}");
+                                var byteArr = Utility.ApplyFrameToMessage(ms);
 
-                        Task.Run(() => _client.Send(byteArr));
+                                //_logger.LogInformation($"Sending data {read}");
+
+                                Task.Run(() => _client.Send(byteArr));
+                            }
+                        }
 
                         arrayPool.Return(buffer);
                     }
@@ -209,6 +228,8 @@ namespace Bobcat.Client
             {
                 _logger.LogError($"An error occurred: {e.Message}");
             }
+
+            _logger.LogInformation("Finish ProcessFFmpegStream.");
         }
 
         private CamClientRequest GenerateRequest(byte[] buffer)
@@ -219,7 +240,8 @@ namespace Bobcat.Client
                 {
                     ClientType = CamClientType.Provider,
                     Id = _uniqueId,
-                    Hostname = _hostname
+                    Hostname = _hostname,
+                    ClientConfig = this.GenerateCurrentConfiguration()
                 },
                 Header = new CamClientHeader()
                 {
@@ -243,40 +265,34 @@ namespace Bobcat.Client
                 });
             }
         }
-
-        private void ProcessBinaryReceived(byte[] buffer)
+        
+        private async Task ProcessBinaryReceived(byte[] buffer)
         {
             try
             {
                 // Extract frame size which will be in the first 4 bytes of the buffer. We can then 
                 // deserialize the protobuf buffer.
-                var frame = new byte[4];
-                Array.Copy(buffer, 0, frame, 0, 4);
-
-                if (BitConverter.IsLittleEndian)
-                    Array.Reverse(frame);
-
-                var dataLength = BitConverter.ToInt32(frame, 0);
-
-                var ms = new MemoryStream(buffer, 4, dataLength);
+                var ms = Utility.ExtractMessage(buffer);
 
                 var request = Serializer.Deserialize<CamClientRequest>(ms);
 
-                if (request?.ClientData == null)
+                if (request == null)
                 {
-                    _logger.LogError("Received bad request.");
+                    _logger.LogError("Unable to deserialise buffer message.");
                     return;
                 }
 
                 switch (request.Header.HeaderType)
                 {
                     case CamClientHeaderType.Start:
-                        Task.Run(async () =>
-                        {
-                            await this.InitialiseCamera();
-                        });
+                        _logger.LogInformation("Received start request.");
+                        
+                        await this.InitialiseCamera();
+                        
                         break;
                     case CamClientHeaderType.Stop:
+                        _logger.LogInformation("Received stop request.");
+
                         if (_running)
                         {
                             _cameraTokenSource.Cancel();
@@ -284,12 +300,112 @@ namespace Bobcat.Client
 
                         break;
                     case CamClientHeaderType.Config:
+                        _logger.LogInformation("Received config change request.");
+                        
+                        this.ProcessConfigChangeRequest(Encoding.Unicode.GetString(request.Data));
+                        await this.InitialiseCamera();
+
                         break;
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Could not process binary websocket request, possibly not of correct type.");
+            }
+        }
+
+        private List<CameraConfig> GenerateCurrentConfiguration()
+        {
+            var cameraConfigList = new List<CameraConfig>
+            {
+                new CameraConfig()
+                {
+                    ConfigType = nameof(MMALCameraConfig.Brightness),
+                    ConfigValue = MMALCameraConfig.Brightness.ToString(CultureInfo.InvariantCulture)
+                },
+                new CameraConfig()
+                {
+                    ConfigType = nameof(MMALCameraConfig.Sharpness),
+                    ConfigValue = MMALCameraConfig.Sharpness.ToString(CultureInfo.InvariantCulture)
+                },
+                new CameraConfig()
+                {
+                    ConfigType = nameof(MMALCameraConfig.Contrast),
+                    ConfigValue = MMALCameraConfig.Contrast.ToString(CultureInfo.InvariantCulture)
+                },
+                new CameraConfig()
+                {
+                    ConfigType = nameof(MMALCameraConfig.Saturation),
+                    ConfigValue = MMALCameraConfig.Saturation.ToString(CultureInfo.InvariantCulture)
+                },
+                new CameraConfig()
+                {
+                    ConfigType = nameof(MMALCameraConfig.ImageFx),
+                    ConfigValue = MMALCameraConfig.ImageFx.ToString()
+                }
+            };
+
+            return cameraConfigList;
+        }
+
+        private void ProcessConfigChangeRequest(string changeRequestString)
+        {
+            _logger.LogInformation($"Received JSON {changeRequestString}");
+
+            var changeRequestList = JsonConvert.DeserializeObject<List<CameraConfig>>(changeRequestString);
+
+            if (changeRequestList?.Count == 0)
+            {
+                _logger.LogError("Could not deserialise JSON from config change request.");
+                return;
+            }
+
+            _logger.LogInformation($"Received {changeRequestList.Count} items in payload.");
+
+            foreach (var changeRequest in changeRequestList)
+            {
+                if (string.IsNullOrEmpty(changeRequest.ConfigType) || string.IsNullOrEmpty(changeRequest.ConfigValue))
+                {
+                    _logger.LogError($"Received invalid data in change request JSON. {changeRequest.ConfigType} {changeRequest.ConfigValue}");
+                    return;
+                }
+
+                var configTypeObj = typeof(MMALCameraConfig);
+                var property =
+                    configTypeObj.GetProperty(changeRequest.ConfigType, BindingFlags.Static | BindingFlags.Public);
+
+                if (property == null)
+                {
+                    _logger.LogError("Could not parse PropertyInfo from config change request.");
+                    return;
+                }
+
+                try
+                {
+                    if (property.PropertyType.IsEnum)
+                    {
+                        _logger.LogInformation("Config request is enum type.");
+
+                        if (Enum.TryParse(property.PropertyType, changeRequest.ConfigValue, out object enumFromString))
+                        {
+                            property.SetValue(property.GetValue(changeRequest.ConfigType), enumFromString);
+                        }
+                    }
+                    else if (property.PropertyType == typeof(int) || property.PropertyType == typeof(double))
+                    {
+                        _logger.LogInformation("Config request is numeric type.");
+
+                        if (int.TryParse(changeRequest.ConfigValue, out int intFromString))
+                        {
+                            property.SetValue(property.GetValue(changeRequest.ConfigType), intFromString);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Could not set global config from config change request.");
+                    return;
+                }
             }
         }
 

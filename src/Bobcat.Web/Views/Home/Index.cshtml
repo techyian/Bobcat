@@ -1,46 +1,95 @@
-﻿<div id="clientContainer" class="row h-100">
-    <div class="col-md-12 col-lg-6 mb-3 mb-lg-0 mb-xl-0">
-
-        <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createConnectionModal">
-            Create new connection
+﻿<div id="clientContainer" class="h-100 client-container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <a class="navbar-brand" href="#">Bobcat - Websocket streaming</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
         </button>
-        
-        <div id="connectionContainer" class="row" data-bind="foreach: selectedClients">
-            <div class="col-4">
-                <canvas class="video-canvas" data-bind="customConnectionBinding: player">
-                    <p>
-                        Please use a browser that supports the Canvas Element, like
-                        <a href="http://www.google.com/chrome">Chrome</a>,
-                        <a href="http://www.mozilla.com/firefox/">Firefox</a>,
-                        <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
-                    </p>
-                </canvas>
-                <div class="dropdown">
 
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-adjust"></i>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="form-inline my-2 my-lg-0 ml-auto">
+                <button class="btn btn-outline-success my-2 my-sm-0" data-toggle="modal" data-target="#createConnectionModal">Create connection</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-12 col-lg-6 mb-3 mb-lg-0 mb-xl-0">
+            <div id="connectionContainer" class="row" data-bind="foreach: selectedClients">
+                <div class="col-4">
+                    <canvas class="video-canvas" data-bind="customConnectionBinding: player">
+                        <p>
+                            Please use a browser that supports the Canvas Element, like
+                            <a href="http://www.google.com/chrome">Chrome</a>,
+                            <a href="http://www.mozilla.com/firefox/">Firefox</a>,
+                            <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
+                        </p>
+                    </canvas>
+                    <button class="btn btn-secondary" data-bind="click: $root.showClientConfig">
+                        <i class="fas fa-cogs"></i>
                     </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" data-bind="click: function(data, event) { $root.setCameraConfig(data, event, 'ImageFx', 'Sketch') }">ImageFx - Sketch</button>
-                        <button class="dropdown-item" type="button">Another action</button>
-                        <button class="dropdown-item" type="button">Something else here</button>
-                    </div>
-                    
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-camera-retro"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button">Action</button>
-                        <button class="dropdown-item" type="button">Another action</button>
-                        <button class="dropdown-item" type="button">Something else here</button>
-                    </div>
                 </div>
             </div>
         </div>
-        
     </div>
-
+    
+    <div class="bottom-container" data-bind="visible: showClientConfigContainer">
+        <div class="row">
+            <div class="col-6">
+                <div class="form-group row">
+                    <div class="col-4">
+                        <label>Hostname:</label>
+                    </div>
+                    <div class="col-4">
+                        <label data-bind="text: clientHostname"></label>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Brightness:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" data-bind="value: clientBrightness" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Sharpness:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" data-bind="value: clientSharpness" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Contrast:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" data-bind="value: clientContrast" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Saturation:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" data-bind="value: clientSaturation" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>ImageFx:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-control" data-bind="options: clientImageFxOptions, optionsText: 'imageFxName', optionsValue: 'imageFxValue', value: selectedImageFx"></select>
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline-success my-2 my-sm-0" data-bind="click: setCameraConfig">Save config</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="createConnectionModal" tabindex="-1" role="dialog" aria-labelledby="createConnectionModalLabel" aria-hidden="true">
@@ -58,25 +107,25 @@
                             <a href="#" id="wsClientSearch" class="btn btn-sm btn-success" data-bind="click: getProviders">Search for providers</a>
                         </div>
                     </div>
-                    
+
                     <div class="form-group row">
                         <div class="col-12 table-responsive">
                             <table class="table table-sm" data-bind="visible: camClients() && camClients().length > 0">
                                 <thead>
-                                <tr>
-                                    <th scope="col">Select</th>
-                                    <th scope="col">Hostname</th>
-                                </tr>
+                                    <tr>
+                                        <th scope="col">Select</th>
+                                        <th scope="col">Hostname</th>
+                                    </tr>
                                 </thead>
                                 <tbody data-bind="foreach: camClients">
-                                <tr>
-                                    <td><input type="checkbox" data-bind="checked: selected" /></td>
-                                    <td data-bind="text: hostname"></td>
-                                </tr>
+                                    <tr>
+                                        <td><input type="checkbox" data-bind="checked: selected" /></td>
+                                        <td data-bind="text: hostname"></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
+
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -88,33 +137,10 @@
     </div>
 </div>
 
+
+
 @section Scripts {
     <script type="text/javascript">
-
         ko.applyBindings(new ClientViewModel(), document.getElementById("clientContainer"));
-
-        //$(document).ready(function () {
-        //    var canvas = document.getElementById('videoCanvas');
-        //    //var ctx = canvas.getContext('2d');
-        //    //ctx.fillStyle = 'blue';
-        //    //ctx.fillText('Loading...', canvas.width / 2 - 30, canvas.height / 3);
-
-        //    var player = new JSMpeg.Player('ws://localhost:44369/ws',
-        //        {
-        //            canvas: canvas
-        //        });
-
-        //    player.source.onMessage = function (ev) {
-
-        //        var isFirstChunk = !player.source.established;
-        //        player.source.established = true;
-        //        if (isFirstChunk && player.source.onEstablishedCallback) {
-        //            player.source.onEstablishedCallback(player.source);
-        //        }
-        //        if (this.destination) {
-        //            player.source.destination.write(ev.data);
-        //        }
-        //    }
-        //});
     </script>
 }

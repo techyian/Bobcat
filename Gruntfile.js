@@ -73,6 +73,10 @@ module.exports = function(grunt) {
 		site: {
 			files: ['src/Bobcat.Web/wwwroot/js/app/**/*.js'],
 			tasks: ['concat', 'babel']
+		},
+		sass: {
+			files: ['src/Bobcat.Web/wwwroot/sass/**/*.scss'],
+			tasks: ['sass']
 		}
     }
   });

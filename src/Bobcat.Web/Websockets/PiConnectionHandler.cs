@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
+using Bobcat.Common;
 using Microsoft.Extensions.Logging;
 using ProtoBuf;
 using Bobcat.Common.Network;
@@ -33,7 +34,8 @@ namespace Bobcat.Web.Websockets
                 Id = c.Id,
                 ConnectionId = c.ConnectionId,
                 Hostname = c.Hostname,
-                ClientType = c.ClientType
+                ClientType = c.ClientType,
+                ClientConfig = c.ClientConfig
             }).ToList();
         }
 
@@ -63,23 +65,26 @@ namespace Bobcat.Web.Websockets
                         // Try and parse as JSON message.
                         try
                         {
-                            var configChange = JsonConvert.DeserializeObject<CameraConfigChange>(text.Replace("__config__", ""));
+                            var filteredText = text.Replace("__config__", "");
+                            var configChange = JsonConvert.DeserializeObject<List<CameraConfig>>(filteredText);
 
-                            if (configChange != null)
+                            if (configChange != null && configChange.Count > 0)
                             {
                                 // We have received a config change request, construct a CamClientRequest.
                                 var ms = new MemoryStream();
                                 var camClientRequest = this.GenerateRequest(new CamClientHeader()
                                 {
                                     HeaderType = CamClientHeaderType.Config
-                                }, Encoding.Unicode.GetBytes(text));
+                                }, Encoding.Unicode.GetBytes(filteredText));
 
                                 Serializer.Serialize(ms, camClientRequest);
 
-                                await this.SendBufferAsync(requestedProviderSocket, ms.ToArray());
+                                var buffer = Utility.ApplyFrameToMessage(ms);
+
+                                await this.SendBufferAsync(requestedProviderSocket, buffer);
                             }
                         }
-                        catch
+                        catch (Exception e)
                         {
                             // Just swallow and ignore if unable to parse JSON.
                         }
@@ -87,21 +92,18 @@ namespace Bobcat.Web.Websockets
                 }
                 else
                 {
-                    // The provider isn't available anymore so we should abort the socket requesting the provider.
-                    socket.Abort();
-
                     await this.OnDisconnected(connectionId);
                     await this.OnDisconnected(requestedProviderId);
                 }
             }
-
         }
 
         public override async Task ReceiveBufferAsync(WebSocket socket, string connectionId, WebSocketReceiveResult result, byte[] buffer)
         {
             try
             {
-                var request = this.ExtractCamClientRequestMessage(buffer);
+                var message = Utility.ExtractMessage(buffer);
+                var request = Serializer.Deserialize<CamClientRequest>(message);
 
                 if (request?.ClientData == null)
                 {
@@ -146,24 +148,6 @@ namespace Bobcat.Web.Websockets
             {
                 _logger.LogError(e, "Could not process received buffer.");
             }
-        }
-
-        private CamClientRequest ExtractCamClientRequestMessage(byte[] buffer)
-        {
-            // Data length will be in the first 4 bytes of the buffer.
-            var frame = new byte[4];
-            Array.Copy(buffer, 0, frame, 0, 4);
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(frame);
-
-            var dataLength = BitConverter.ToInt32(frame, 0);
-
-            var ms = new MemoryStream(buffer, 4, dataLength);
-
-            var request = Serializer.Deserialize<CamClientRequest>(ms);
-
-            return request;
         }
 
         private WebSocket GetProviderActiveSocket(string requestedProviderId)

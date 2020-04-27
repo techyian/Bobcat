@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using ProtoBuf;
 
@@ -15,6 +16,8 @@ namespace Bobcat.Common.Network
         public DateTime? LastSeen { get; set; }
         [ProtoMember(4)]
         public CamClientType ClientType { get; set; }
+        [ProtoMember(5)]
+        public List<CameraConfig> ClientConfig { get; set; }
         public string ConnectionId { get; set; }
         public WebSocket ActiveSocket { get; set; }
     }
