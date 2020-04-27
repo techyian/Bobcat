@@ -30,6 +30,7 @@ namespace Bobcat.Client
 
             Console.CancelKeyPress += Console_OnCancelKeyPress;
 
+            _service.ConfigureCaptureHandler();
             _service.InitialiseCamera();
             _service.InitialiseClient();
 

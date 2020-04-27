@@ -5,12 +5,10 @@ using MMALSharp.Native;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -21,7 +19,6 @@ using MMALSharp.Common.Utility;
 using ProtoBuf;
 using Bobcat.Common.Network;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Websocket.Client;
 
 namespace Bobcat.Client
@@ -36,12 +33,12 @@ namespace Bobcat.Client
         
         private static readonly object ReadLock = new object();
 
-        private Process _captureHandlerProcess;
+        private BobcatCaptureHandler _captureHandler;
         private CancellationTokenSource _cameraTokenSource;
         private WebsocketClient _client;
         private bool _running;
         private DateTime _lastPingSent;
-        
+     
         public PiCamService(ILogger<PiCamService> logger, CancellationTokenSource applicationTokenSource)
         {
             _logger = logger;
@@ -99,6 +96,22 @@ namespace Bobcat.Client
             await client.Start();
         }
 
+        public void ConfigureCaptureHandler()
+        {
+            MMALCameraConfig.VideoResolution = new Resolution(640, 480);
+            MMALCameraConfig.VideoFramerate = new MMAL_RATIONAL_T(24, 1);
+            MMALCameraConfig.VideoEncoding = MMALEncoding.I420;
+
+            var width = MMALCameraConfig.VideoResolution.Width;
+            var height = MMALCameraConfig.VideoResolution.Height;
+            var fr = MMALCameraConfig.VideoFramerate.Num;
+            var argument = $"-f rawvideo -pix_fmt yuv420p -s {width}x{height} -r {fr} -i - -f mpegts -c:v mpeg1video -c:a none -b:v 800k -bf 0 -r {fr} -s {width}x{height} -";
+
+            var handler = new BobcatCaptureHandler(argument);
+
+            _captureHandler = handler;
+        }
+
         public async Task InitialiseCamera()
         {
             if (_running)
@@ -133,27 +146,16 @@ namespace Bobcat.Client
              */
             
             //MMALCameraConfig.Debug = true;
-            MMALCameraConfig.VideoResolution = new Resolution(640, 480);
-            MMALCameraConfig.VideoFramerate = new MMAL_RATIONAL_T(24, 1);
-            MMALCameraConfig.VideoEncoding = MMALEncoding.I420;
             
-            var width = MMALCameraConfig.VideoResolution.Width;
-            var height = MMALCameraConfig.VideoResolution.Height;
-            var fr = MMALCameraConfig.VideoFramerate.Num;
-            var argument = $"-f rawvideo -pix_fmt yuv420p -s {width}x{height} -r {fr} -i - -f mpegts -c:v mpeg1video -c:a none -b:v 800k -bf 0 -r {fr} -s {width}x{height} -";
-
-            using (var handler = new BobcatCaptureHandler(argument))
             using (var preview = new MMALNullSinkComponent())
             {
-                _cam.ConfigureCameraSettings(null, handler);
+                _cam.ConfigureCameraSettings(null, _captureHandler);
 
                 // Create our component pipeline.         
                 _cam.Camera.PreviewPort.ConnectTo(preview);
 
                 // Camera warm up time
                 await Task.Delay(2000).ConfigureAwait(false);
-
-                _captureHandlerProcess = handler.CurrentProcess;
 
                 try
                 {
@@ -180,11 +182,11 @@ namespace Bobcat.Client
         {
             try
             {
-                if (_captureHandlerProcess.StandardOutput.BaseStream.CanRead)
+                if (_captureHandler.CurrentProcess.StandardOutput.BaseStream.CanRead)
                 {
                     var arrayPool = ArrayPool<byte>.Shared;
 
-                    while (!_cameraTokenSource.Token.IsCancellationRequested ||
+                    while (!_cameraTokenSource.Token.IsCancellationRequested &&
                            !_applicationTokenSource.Token.IsCancellationRequested)
                     {
                         // ArrayPool should hopefully be quicker for larger allocations.
@@ -196,7 +198,7 @@ namespace Bobcat.Client
                             if (!_cameraTokenSource.Token.IsCancellationRequested &&
                                 !_applicationTokenSource.Token.IsCancellationRequested)
                             {
-                                var read = _captureHandlerProcess.StandardOutput.BaseStream.Read(buffer, 0, buffer.Length);
+                                var read = _captureHandler.CurrentProcess.StandardOutput.BaseStream.Read(buffer, 0, buffer.Length);
 
                                 // The buffer we send to the server should only be the length of the amount of data we were able to extract from
                                 // the StandardOutput stream so we need to copy that chunk into a smaller buffer.
@@ -413,7 +415,7 @@ namespace Bobcat.Client
         {
             _logger.LogInformation("Disposing and cleaning up native resources.");
             _applicationTokenSource?.Dispose();
-            _captureHandlerProcess?.Dispose();
+            _captureHandler?.Dispose();
             _cameraTokenSource?.Dispose();
             _client?.Dispose();
             _cam.Cleanup();
