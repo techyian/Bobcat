@@ -85,7 +85,32 @@
                         <select class="form-control" data-bind="options: clientImageFxOptions, optionsText: 'imageFxName', optionsValue: 'imageFxValue', value: selectedImageFx"></select>
                     </div>
                 </div>
-                
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Exposure Mode:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-control" data-bind="options: clientExposureModeOptions, optionsText: 'exposureModeName', optionsValue: 'exposureModeValue', value: selectedExposureMode"></select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Exposure Metering Mode:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-control" data-bind="options: clientExposureMeterModeOptions, optionsText: 'exposureMeterModeName', optionsValue: 'exposureMeterModeValue', value: selectedExposureMeterMode"></select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label>Awb Mode:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-control" data-bind="options: clientAwbModeOptions, optionsText: 'awbModeName', optionsValue: 'awbModeValue', value: selectedAwbMode"></select>
+                    </div>
+                </div>
+
+
                 <button class="btn btn-outline-success my-2 my-sm-0" data-bind="click: setCameraConfig">Save config</button>
             </div>
         </div>

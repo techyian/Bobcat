@@ -12,6 +12,7 @@
     self.clientSharpness = ko.observable(0);
     self.clientContrast = ko.observable(0);
     self.clientSaturation = ko.observable(0);
+    
     self.clientImageFxOptions = ko.observableArray([
         { imageFxName: 'None', imageFxValue: 'MMAL_PARAM_IMAGEFX_NONE' },
         { imageFxName: 'Cartoon', imageFxValue: 'MMAL_PARAM_IMAGEFX_CARTOON' },
@@ -31,6 +32,47 @@
         { imageFxName: 'Washedout', imageFxValue: 'MMAL_PARAM_IMAGEFX_WASHEDOUT' }
     ]);
     self.selectedImageFx = ko.observable('MMAL_PARAM_IMAGEFX_NONE');
+
+    self.clientExposureModeOptions = ko.observableArray([
+        { exposureModeName: 'Off', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_OFF' },
+        { exposureModeName: 'Auto', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_AUTO' },
+        { exposureModeName: 'Night', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_NIGHT' },
+        { exposureModeName: 'Night Preview', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_NIGHTPREVIEW' },
+        { exposureModeName: 'Backlight', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_BACKLIGHT' },
+        { exposureModeName: 'Spotlight', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_SPOTLIGHT' },
+        { exposureModeName: 'Sports', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_SPORTS' },
+        { exposureModeName: 'Snow', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_SNOW' },
+        { exposureModeName: 'Beach', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_BEACH' },
+        { exposureModeName: 'Very Long', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_VERYLONG' },
+        { exposureModeName: 'Fixed FPS', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_FIXEDFPS' },
+        { exposureModeName: 'Anti-shake', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_ANTISHAKE' },
+        { exposureModeName: 'Fireworks', exposureModeValue: 'MMAL_PARAM_EXPOSUREMODE_FIREWORKS' }
+    ]);
+    self.selectedExposureMode = ko.observable('MMAL_PARAM_EXPOSUREMODE_AUTO');
+
+    self.clientExposureMeterModeOptions = ko.observableArray([
+        { exposureMeterModeName: 'Average', exposureMeterModeValue: 'MMAL_PARAM_EXPOSUREMETERINGMODE_AVERAGE' },
+        { exposureMeterModeName: 'Spot', exposureMeterModeValue: 'MMAL_PARAM_EXPOSUREMETERINGMODE_SPOT' },
+        { exposureMeterModeName: 'Backlit', exposureMeterModeValue: 'MMAL_PARAM_EXPOSUREMETERINGMODE_BACKLIT' },
+        { exposureMeterModeName: 'Matrix', exposureMeterModeValue: 'MMAL_PARAM_EXPOSUREMETERINGMODE_MATRIX' }
+    ]);
+    self.selectedExposureMeterMode = ko.observable('MMAL_PARAM_EXPOSUREMETERINGMODE_AVERAGE');
+
+    self.clientAwbModeOptions = ko.observableArray([
+        { awbModeName: 'Off', awbModeValue: 'MMAL_PARAM_AWBMODE_OFF' },
+        { awbModeName: 'Auto', awbModeValue: 'MMAL_PARAM_AWBMODE_AUTO' },
+        { awbModeName: 'Sunlight', awbModeValue: 'MMAL_PARAM_AWBMODE_SUNLIGHT' },
+        { awbModeName: 'Cloudy', awbModeValue: 'MMAL_PARAM_AWBMODE_CLOUDY' },
+        { awbModeName: 'Shade', awbModeValue: 'MMAL_PARAM_AWBMODE_SHADE' },
+        { awbModeName: 'Tungsten', awbModeValue: 'MMAL_PARAM_AWBMODE_TUNGSTEN' },
+        { awbModeName: 'Fluorescent', awbModeValue: 'MMAL_PARAM_AWBMODE_FLUORESCENT' },
+        { awbModeName: 'Incandescent', awbModeValue: 'MMAL_PARAM_AWBMODE_INCANDESCENT' },
+        { awbModeName: 'Flash', awbModeValue: 'MMAL_PARAM_AWBMODE_FLASH' },
+        { awbModeName: 'Horizon', awbModeValue: 'MMAL_PARAM_AWBMODE_HORIZON' },
+        { awbModeName: 'Greyworld', awbModeValue: 'MMAL_PARAM_AWBMODE_GREYWORLD' }
+    ]);
+    self.selectedAwbMode = ko.observable('MMAL_PARAM_AWBMODE_AUTO');
+
     self.showClientConfigContainer = ko.observable(false);
     
     self.getProviders = function() {
@@ -72,6 +114,9 @@
             cameraConfigArr.push(new CameraConfig('Contrast', self.clientContrast().toString()));
             cameraConfigArr.push(new CameraConfig('Saturation', self.clientSaturation().toString()));
             cameraConfigArr.push(new CameraConfig('ImageFx', self.selectedImageFx()));
+            cameraConfigArr.push(new CameraConfig('ExposureMode', self.selectedExposureMode()));
+            cameraConfigArr.push(new CameraConfig('ExposureMeterMode', self.selectedExposureMeterMode()));
+            cameraConfigArr.push(new CameraConfig('AwbMode', self.selectedAwbMode()));
 
             var json = JSON.stringify(cameraConfigArr);
 
