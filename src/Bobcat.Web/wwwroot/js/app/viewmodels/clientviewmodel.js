@@ -173,6 +173,11 @@
             if (currentObject.player) {
                 currentObject.player.source.destroy();
             } 
+            
+            element.style.width = '100%';
+            element.style.height = '100%';
+            element.width = element.offsetWidth;
+            element.height = element.offsetHeight;
 
             let player = new JSMpeg.Player(`ws://localhost:44369/bobcat-${currentObject.connectionId}`,
                 {

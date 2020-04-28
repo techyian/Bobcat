@@ -11,24 +11,20 @@
             </div>
         </div>
     </nav>
-
-    <div class="row">
-        <div class="col-md-12 col-lg-6 mb-3 mb-lg-0 mb-xl-0">
-            <div id="connectionContainer" class="row" data-bind="foreach: selectedClients">
-                <div class="col-4">
-                    <canvas class="video-canvas" data-bind="customConnectionBinding: player">
-                        <p>
-                            Please use a browser that supports the Canvas Element, like
-                            <a href="http://www.google.com/chrome">Chrome</a>,
-                            <a href="http://www.mozilla.com/firefox/">Firefox</a>,
-                            <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
-                        </p>
-                    </canvas>
-                    <button class="btn btn-secondary" data-bind="click: $root.showClientConfig">
-                        <i class="fas fa-cogs"></i>
-                    </button>
-                </div>
-            </div>
+    
+    <div id="connectionContainer" class="row mb-3 mb-lg-0 mb-xl-0" data-bind="foreach: selectedClients">
+        <div class="col-md-4">
+            <canvas class="video-canvas" data-bind="customConnectionBinding: player">
+                <p>
+                    Please use a browser that supports the Canvas Element, like
+                    <a href="http://www.google.com/chrome">Chrome</a>,
+                    <a href="http://www.mozilla.com/firefox/">Firefox</a>,
+                    <a href="http://www.apple.com/safari/">Safari</a> or Internet Explorer 10
+                </p>
+            </canvas>
+            <button class="btn btn-secondary" data-bind="click: $root.showClientConfig">
+                <i class="fas fa-cogs"></i>
+            </button>
         </div>
     </div>
     
