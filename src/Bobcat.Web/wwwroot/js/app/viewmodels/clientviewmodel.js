@@ -168,6 +168,7 @@
             let interval = null;
             let parent = bindingContext.$parent;
             let currentObject = bindingContext.$data;
+            let numReconnectAttempts = 0;
 
             if (currentObject.player) {
                 currentObject.player.source.destroy();
@@ -202,9 +203,15 @@
 
             player.source.onOpen = function() {
                 player.source.progress = 1;
+                
+                if (numReconnectAttempts < 5) {
+                    // Ping server every 5 seconds.
+                    if (interval > 0) {
+                        clearInterval(interval);
+                    }
 
-                // Ping server every 5 seconds.
-                interval = setInterval(ping, 5000);
+                    interval = setInterval(ping, 5000);
+                }
             }
 
             player.source.onClose = function() {
@@ -217,12 +224,17 @@
 
             function ping() {
                 player.source.socket.send(`__ping__`);
-
+                
                 tm = setTimeout(function () {
                     // If we haven't received a reply in 5 seconds, attempt reconnect.
                     player.source.established = false;
+                    
                     clearInterval(interval);
-                    handleReconnect();
+
+                    if (numReconnectAttempts < 5) {
+                        handleReconnect();
+                        numReconnectAttempts++;
+                    }
                 }, 5000);
             }
 
