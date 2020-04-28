@@ -1,4 +1,6 @@
-﻿<div id="clientContainer" class="h-100 client-container">
+﻿@model string
+
+<div id="clientContainer" class="h-100 client-container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
         <a class="navbar-brand" href="#">Bobcat - Websocket streaming</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,6 +164,6 @@
 
 @section Scripts {
     <script type="text/javascript">
-        ko.applyBindings(new ClientViewModel(), document.getElementById("clientContainer"));
+        ko.applyBindings(new ClientViewModel('@Model'), document.getElementById("clientContainer"));
     </script>
 }

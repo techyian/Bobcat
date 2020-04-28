@@ -1,7 +1,8 @@
-﻿function ClientViewModel() {
+﻿function ClientViewModel(relayHostname) {
 
     let self = this;
 
+    self.relayHostname = relayHostname;
     self.camClients = ko.observableArray([]);
     self.selectedClients = ko.observableArray([]);
     self.currentSelectedClient = null;
@@ -181,7 +182,8 @@
             element.width = element.offsetWidth;
             element.height = element.offsetHeight;
 
-            let player = new JSMpeg.Player(`ws://localhost:44369/bobcat-${currentObject.connectionId}`,
+            // Example relayHostname "ws://localhost:44369"
+            let player = new JSMpeg.Player(`${bindingContext.$parent.relayHostname}/bobcat-${currentObject.connectionId}`,
                 {
                     canvas: element
                 });

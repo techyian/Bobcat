@@ -30,6 +30,7 @@ namespace Bobcat.Client
         private readonly MMALCamera _cam = MMALCamera.Instance;
         private readonly string _uniqueId = Guid.NewGuid().ToString();
         private readonly string _hostname;
+        private readonly string _connectionString;
         
         private static readonly object ReadLock = new object();
 
@@ -39,8 +40,9 @@ namespace Bobcat.Client
         private bool _running;
         private DateTime _lastPingSent;
      
-        public PiCamService(ILogger<PiCamService> logger, CancellationTokenSource applicationTokenSource)
+        public PiCamService(ILogger<PiCamService> logger, CancellationTokenSource applicationTokenSource, string connectionString)
         {
+            _connectionString = connectionString;
             _logger = logger;
             _applicationTokenSource = applicationTokenSource;
             _hostname = Dns.GetHostName();
@@ -48,7 +50,7 @@ namespace Bobcat.Client
 
         public async Task InitialiseClient()
         {
-            var url = new Uri("ws://192.168.1.92:44369/bobcat");
+            var url = new Uri($"{_connectionString}/bobcat");
 
             var factory = new Func<ClientWebSocket>(() => new ClientWebSocket
             {
