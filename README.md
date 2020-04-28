@@ -47,3 +47,5 @@ and it should be ok.
 
 **Memory access denied** - Occasionally when viewing a video stream I have noticed Javascript console errors relating to memory access being denied. This issue causes the video to freeze with green stripes. To rectify this, reload the 
 webpage and try again.
+
+**Latency** - If latency increases you will begin to notice artifacts appearing on your stream. I will be looking into ways to decrease latency.
