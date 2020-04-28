@@ -125,6 +125,8 @@
     };
 
     self.showClientConfig = function (camClient) {
+        self.clientHostname(camClient.hostname);
+
         for (let i = 0; i < camClient.currentConfig.length; i++) {
             let currentConfigItem = camClient.currentConfig[i];
 
