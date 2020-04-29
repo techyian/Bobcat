@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MMALSharp.Common.Utility;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog.Extensions.Logging;
 
@@ -26,19 +27,18 @@ namespace Bobcat.Client
             });
 
             var configText = File.ReadAllText($"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}/appsettings.json");
-            var jObj = JObject.Parse(configText);
-            var connStr = jObj["RelayServerHostname"].ToString();
-
-            if (string.IsNullOrEmpty(connStr))
+            var config = JsonConvert.DeserializeObject<ClientConfiguration>(configText);
+            
+            if (string.IsNullOrEmpty(config.RelayServerHostname) || string.IsNullOrEmpty(config.UniqueId))
             {
-                throw new NullReferenceException("Could not parse ConnectionString from appsettings.json");
+                throw new NullReferenceException("Could not parse configuration from appsettings.json");
             }
 
             MMALLog.LoggerFactory = loggerFactory;
 
             _applicationTokenSource = new CancellationTokenSource();
             
-            _service = new PiCamService(loggerFactory.CreateLogger<PiCamService>(), _applicationTokenSource, connStr);
+            _service = new PiCamService(loggerFactory.CreateLogger<PiCamService>(), _applicationTokenSource, config);
 
             Console.CancelKeyPress += Console_OnCancelKeyPress;
 
