@@ -22,6 +22,77 @@ Bobcat features 3 main actors to support its use:
 
 The architecture surrounding Bobcat runs on the principal of there being a "Pi Client" which will be streaming the video; this client uses Websockets to stream raw YUV420 video frames to a server running ASP.NET Core. The server intercepts the video frames and will push them out to any Internet browser which has connected again via Websockets to the server. 
 
+### Dependencies
+
+- NodeJS
+- .NET Core 3.1 SDK & Runtime
+- FFmpeg (Client only)
+
+### Setup
+
+**Windows**
+
+Step 1 - Deploy Client build to your Raspberry Pi
+-------------------------------------------------
+
+Run the `build.cmd` file which will do a build of the solution and also download the client-side dependencies required. The output files will be in `Bobcat.Client\bin\Release\netcoreapp3.1\linux-arm\publish`. These files
+need moving over to a folder on your Raspberry Pi.
+
+
+Step 2 - Publish and deploy Web project
+---------------------------------------
+
+The Cake script does not publish the Web project as you are free to deploy to whatever architecture you wish using the `dotnet publish` command. If you are deploying to a Linux environment, you should ensure that you are using
+a proper Web server such as NginX to host the application.
+
+Step 3 - Update appsettings.json files
+---------------------------------------
+
+Both the Client and Web projects have their own respective appsettings.json files which contain configuration strings. The current values to be concerned with are `RelayServerHostname` (both projects) and `UniqueId` (Client only), where the 
+`RelayServerHostname` represents the websocket URL of the relay server, e.g. `ws://localhost:44369`, and `UniqueId` is a unique identifier for the client (I tend to use GUIDs).
+
+Step 4 - Start Client application
+---------------------------------
+
+You should be able to run the client by running `./Bobcat.Client` on your Raspberry Pi (you may need to run `chmod +x ./Bobcat.Client` first). If your configuration is correct, FFmpeg should start and the camera should now be streaming.
+
+Step 5 - Navigate to Web application and create a connection
+------------------------------------------------------------
+
+If your setup has gone smoothly you should now be able to browse to the URL where your web application is hosted. Click on the `Create Connection` button and find your Pi.
+
+
+**Linux**
+
+Step 1 - Deploy Client build to your Raspberry Pi
+-------------------------------------------------
+
+Using the .NET Core SDK, navigate to the location of `Bobcat.Client.csproj` and run `dotnet build && dotnet publish -c Release -r linux-arm`. The output files will be in `Bobcat.Client\bin\Release\netcoreapp3.1\linux-arm\publish`.
+These files now need moving over to a folder on your Raspberry Pi.
+
+Step 2 - Publish and deploy Web project
+-------------------------------------------------
+
+Navigate to the location of `Bobcat.Web.csproj` and run `dotnet build && dotnet publish -c Release -r ENVIRONMENT` (where ENVIRONMENT is the environment of where the Web application will be hosted). If you are deploying to a Linux environment, you should ensure that you are using
+a proper Web server such as NginX to host the application.
+
+Step 3 - Update appsettings.json files
+---------------------------------------
+
+Both the Client and Web projects have their own respective appsettings.json files which contain configuration strings. The current values to be concerned with are `RelayServerHostname` (both projects) and `UniqueId` (Client only), where the 
+`RelayServerHostname` represents the websocket URL of the relay server, e.g. `ws://localhost:44369`, and `UniqueId` is a unique identifier for the client (I tend to use GUIDs).
+
+Step 4 - Start Client application
+---------------------------------
+
+You should be able to run the client by running `./Bobcat.Client` on your Raspberry Pi (you may need to run `chmod +x ./Bobcat.Client` first). If your configuration is correct, FFmpeg should start and the camera should now be streaming.
+
+Step 5 - Navigate to Web application and create a connection
+------------------------------------------------------------
+
+If your setup has gone smoothly you should now be able to browse to the URL where your web application is hosted. Click on the `Create Connection` button and find your Pi.
+
+
 ### FAQ
 
 **Pi Client - The server returned status code '400' when status code '101' was expected.**
