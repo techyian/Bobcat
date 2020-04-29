@@ -37,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
     <Folder Include="wwwroot\sass\modules\" />
     <Folder Include="wwwroot\sass\partials\" />
   </ItemGroup>
