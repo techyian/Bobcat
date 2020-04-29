@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿// <copyright file="PiCamService.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using Microsoft.Extensions.Logging;
 using MMALSharp;
 using MMALSharp.Components;
 using MMALSharp.Native;

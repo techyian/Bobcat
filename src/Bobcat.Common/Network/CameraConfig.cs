@@ -1,4 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿// <copyright file="CameraConfig.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using Newtonsoft.Json;
 using ProtoBuf;
 
 namespace Bobcat.Common.Network

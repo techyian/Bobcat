@@ -1,20 +1,16 @@
+// <copyright file="Startup.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using MMALSharp.Common.Utility;
-using NLog.Extensions.Logging;
-using System;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebSockets;
-using Bobcat.Web;
 using Bobcat.Web.Websockets;
 
-namespace Bobcat
+namespace Bobcat.Web
 {
     public class Startup
     {
@@ -38,16 +34,6 @@ namespace Bobcat
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddWebSocketManager();
-
-            //services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
-            //{
-            //    builder
-            //        .AllowAnyMethod()
-            //        .AllowAnyHeader()
-            //        .AllowAnyOrigin();
-            //}));
-
-            //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
         }
 
@@ -66,7 +52,6 @@ namespace Bobcat
             var serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
             var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
 
-            //app.UseCors("CorsPolicy");
             app.UseWebSockets();
             app.UseRouting();
             app.MapWebSocketManager($"/{WebSocketManagerMiddleware.WebsocketUrlPrefix}", serviceProvider.GetService<PiConnectionHandler>());

@@ -1,4 +1,9 @@
-﻿using System;
+﻿// <copyright file="Program.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -6,7 +11,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MMALSharp.Common.Utility;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog.Extensions.Logging;
 
 namespace Bobcat.Client

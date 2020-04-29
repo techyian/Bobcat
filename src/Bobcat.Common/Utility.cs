@@ -1,7 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// <copyright file="Utility.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using System;
 using System.IO;
-using System.Text;
 
 namespace Bobcat.Common
 {

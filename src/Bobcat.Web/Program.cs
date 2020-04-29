@@ -1,14 +1,14 @@
+// <copyright file="Program.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
 using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
-using Bobcat.Web;
-using Bobcat.Web.Network;
 
-namespace Bobcat
+namespace Bobcat.Web
 {
     public class Program
     {
@@ -25,20 +25,6 @@ namespace Bobcat
                     logging.AddConsole();
                     logging.AddNLog("NLog.config");
                 })
-                //.UseKestrel(options =>
-                //{
-                //    // TCP 8007
-                //    options.ListenLocalhost(8007, builder =>
-                //    {
-                //        builder.UseConnectionHandler<CamClientConnectionHandler>();
-                //    });
-                //})
                 .UseStartup<Startup>();
-
-
-        //.ConfigureServices(services =>
-        //{
-        //    services.AddHostedService<PiCamService>();
-        //});
     }
 }

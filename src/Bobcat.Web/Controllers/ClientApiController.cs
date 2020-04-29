@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// <copyright file="ClientApiController.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using Microsoft.AspNetCore.Mvc;
 using Bobcat.Web.Websockets;
 
 namespace Bobcat.Web.Controllers

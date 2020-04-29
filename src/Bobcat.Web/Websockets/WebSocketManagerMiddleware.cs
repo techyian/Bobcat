@@ -1,12 +1,14 @@
-﻿using System;
+﻿// <copyright file="WebSocketManagerMiddleware.cs" company="Techyian">
+// Copyright (c) Ian Auty. All rights reserved.
+// Licensed under the MIT License. Please see LICENSE.txt for License info.
+// </copyright>
+
+using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Bobcat.Common.Network;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
